@@ -1,127 +1,37 @@
 {
-  "$schema": "https://mintlify.com/docs.json",
+  "name": "AQL",
   "theme": "mint",
-  "name": "Mint Starter Kit",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+  "primary": "#7209B7",
+  "light": "#F7FAFF",
+  "dark": "#1A1F36"
+},
+  "logo": {
+    "light": "/images/aql-logo-light.png",
+    "dark": "/images/aql-logo-dark.png",
+    "href": "https://aql.widebot.sa/"
   },
-  "favicon": "/favicon.svg",
+  "icons": { "library": "lucide" },
+  "favicon": "/favicon.ico",
   "navigation": {
     "tabs": [
       {
-        "tab": "Guides",
+        "tab": "User Guide",
         "groups": [
-          {
-            "group": "Getting started",
-            "pages": [
-              "index",
-              "quickstart",
-              "development"
-            ]
-          },
-          {
-            "group": "Customization",
-            "pages": [
-              "essentials/settings",
-              "essentials/navigation"
-            ]
-          },
-          {
-            "group": "Writing content",
-            "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
-            ]
-          },
-          {
-            "group": "AI tools",
-            "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
-            ]
-          }
+          { "group": "Quick Start",       "icon": "rocket",      "pages": ["quickstart"] },
+          { "group": "Accounts & Access", "icon": "user",        "pages": ["accounts"] },
+          { "group": "Workspaces",        "icon": "layout-grid", "pages": ["workspaces","workspace-home","sidebar"] },
+          { "group": "AI Features",       "icon": "sparkles",    "pages": ["ai-overview","ai-knowledge","ai-assistant","aql-genai"] },
+          { "group": "Workspace Settings","icon": "settings",    "pages": ["settings","billing","team","api-credentials"] },
+          { "group": "Help",              "icon": "life-buoy",   "pages": ["troubleshooting","release-notes"] }
         ]
       },
       {
-        "tab": "API reference",
+        "tab": "AI APIs",
         "groups": [
-          {
-            "group": "API documentation",
-            "pages": [
-              "api-reference/introduction"
-            ]
-          },
-          {
-            "group": "Endpoint examples",
-            "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
-            ]
-          }
+          { "group": "API Reference", "icon": "cpu", "openapi": "openapi_aql.yaml" }
         ]
       }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Community",
-          "href": "https://mintlify.com/community",
-          "icon": "slack"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
-        }
-      ]
-    }
-  },
-  "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
-  },
-  "navbar": {
-    "links": [
-      {
-        "label": "Support",
-        "href": "mailto:hi@mintlify.com"
-      }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
-    }
-  },
-  "contextual": {
-    "options": [
-     "copy",
-     "view",
-     "chatgpt",
-     "claude",
-     "perplexity",
-     "mcp",
-     "cursor",
-     "vscode"
-   ]
-  },
-  "footer": {
-    "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
-    }
+    ]
   }
 }

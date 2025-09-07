@@ -1,0 +1,340 @@
+openapi: 3.0.3
+info:
+  title: Widebot AQL/RAG/STT/TTS API
+  version: 1.0.0
+  description: >
+    Official endpoints for AQL Chat, RAG Answers, Speech-to-Text, and Text-to-Speech,
+    derived from your Postman collection.
+
+servers:
+  - url: https://gateway.widebot.net
+
+tags:
+  - name: AQL
+  - name: RAG
+  - name: STT
+  - name: TTS
+
+components:
+  securitySchemes:
+    UserAuth:
+      type: apiKey
+      in: header
+      name: x-user-auth
+    BotId:
+      type: apiKey
+      in: header
+      name: x-bot
+
+  schemas:
+    AQLChatV1Request:
+      type: object
+      properties:
+        Message:
+          type: string
+          example: "ما هي عاصمة مصر وما أهم معالمها السياحية؟"
+        ChatHistory:
+          type: array
+          description: Optional previous messages (when chatting with history).
+          items:
+            type: object
+            properties:
+              Role: { type: string, enum: [User, Assistant] }
+              Content: { type: string }
+        Config:
+          type: object
+          properties:
+            Temperature: { type: number, format: float, example: 0.7 }
+            MaxTokens: { type: integer, example: 1024 }
+            TopProbability: { type: number, format: float, example: 0.9 }
+            RepetitionPenalty: { type: number, format: float, example: 0.1 }
+        PromptStyle:
+          type: integer
+          example: 3
+
+    AQLChatV2MultimodalRequest:
+      type: object
+      properties:
+        Content:
+          type: object
+          properties:
+            Type:
+              type: integer
+              description: Modality type (e.g., 1 = image + text).
+              example: 1
+            ImageUrl:
+              type: string
+              format: uri
+              example: "https://upload.wikimedia.org/wikipedia/commons/4/4d/Cat_November_2010-1a.jpg"
+        Config:
+          type: object
+          properties:
+            Temperature: { type: number, example: 0.7 }
+            MaxTokens: { type: integer, example: 1024 }
+        PromptStyle:
+          type: integer
+          example: 2
+
+    RAGAnswerRequest:
+      type: object
+      required: [Question]
+      properties:
+        Question: { type: string, example: "ما هو الاسم الكامل لمحمد صلاح؟" }
+        IndexNames:
+          type: array
+          items: { type: string }
+          example: ["Mohamed Salah"]
+        Limit: { type: integer, example: 10 }
+        MaxLimit: { type: integer, example: 10 }
+        Temperature: { type: number, example: 0.1 }
+        MaxOutputTokens: { type: integer, example: 1024 }
+        UpdateGlobal: { type: boolean, example: false }
+        IsStream: { type: boolean, example: false }
+
+    RAGStreamRequest:
+      allOf:
+        - $ref: '#/components/schemas/RAGAnswerRequest'
+        - type: object
+          properties:
+            IsStream: { type: boolean, example: true }
+
+    STTStandardForm:
+      type: object
+      properties:
+        Record:
+          type: string
+          format: binary
+          description: Audio file to transcribe.
+        SessionId: { type: string, example: "test-session-1234" }
+        SetDefaultSampleRate: { type: string, enum: ["true","false"], example: "true" }
+        TargetLanguage: { type: string, example: "ar-eg" }
+        MaxRecordLengthInSeconds: { type: string, example: "180" }
+
+    STTStreamForm:
+      type: object
+      properties:
+        Record:
+          type: string
+          format: binary
+        SessionId: { type: string, example: "streaming-session-1234" }
+        SetDefaultSampleRate: { type: string, enum: ["true","false"], example: "true" }
+        SourceLanguage: { type: string, example: "ar-eg" }
+        TargetLanguage: { type: string, example: "ar-eg" }
+        TaskType: { type: string, example: "Transcript" }
+        OutputFormat: { type: string, example: "Text" }
+
+    TTSStandardRequest:
+      type: object
+      required: [text, lang_code, speaker]
+      properties:
+        text: { type: string, example: "وش علومك اليوم؟" }
+        lang_code: { type: string, example: "ar-sa" }
+        speaker: { type: string, example: "Rawy" }
+        temperature: { type: number, example: 0.5 }
+        output_sr: { type: integer, example: 24000 }
+        session_id: { type: string, example: "example-session-001" }
+
+    TTSStreamRequest:
+      type: object
+      required: [TextMessage, LanguageCode, Speaker]
+      properties:
+        TextMessage: { type: string, example: "مرحباً! هذا بث صوتي لحظي." }
+        LanguageCode: { type: string, example: "ar" }
+        Speaker: { type: string, example: "Hesham" }
+        Temperature: { type: number, example: 0.8 }
+        OutputSampleRate: { type: integer, example: 24000 }
+        StreamChunkSize: { type: integer, example: 300 }
+
+security:
+  - UserAuth: []
+  - BotId: []
+
+paths:
+  /api/v1/AQL/chat/completions:
+    post:
+      tags: [AQL]
+      summary: Chat Completion (V1) + History
+      description: Standard chat completion. Supports a single Message or a ChatHistory array.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AQLChatV1Request'
+            examples:
+              singleMessage:
+                value:
+                  Message: "اكتب لي مقالاً قصيراً عن أهمية الذكاء الاصطناعي في التعليم"
+                  Config: { Temperature: 0.8, MaxTokens: 2048, TopProbability: 0.9, RepetitionPenalty: 0.1 }
+                  PromptStyle: 5
+              withHistory:
+                value:
+                  ChatHistory:
+                    - { Role: "User", Content: "ما هي عاصمة مصر؟" }
+                    - { Role: "Assistant", Content: "القاهرة هي العاصمة." }
+                    - { Role: "User", Content: "وما أبرز معالمها؟" }
+                  Config: { Temperature: 0.7, MaxTokens: 1024 }
+                  PromptStyle: 3
+      responses:
+        '200':
+          description: OK
+
+  /api/v2/AQL/chat/completions:
+    post:
+      tags: [AQL]
+      summary: Chat Completion (V2 - Multimodal)
+      description: Multimodal chat completion (e.g., image + text).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AQLChatV2MultimodalRequest'
+            example:
+              Content:
+                Type: 1
+                ImageUrl: "https://upload.wikimedia.org/wikipedia/commons/4/4d/Cat_November_2010-1a.jpg"
+              Config: { Temperature: 0.7, MaxTokens: 1024 }
+              PromptStyle: 2
+      responses:
+        '200':
+          description: OK
+
+  /api/v1/AQL/stream/chat/completions:
+    post:
+      tags: [AQL]
+      summary: Chat Completion (Streaming)
+      description: Streaming chat completion via server-sent events or chunked responses.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AQLChatV1Request'
+            example:
+              Message: "اكتب لي مقالاً قصيراً عن أهمية الذكاء الاصطناعي في التعليم"
+              Config: { Temperature: 0.8, MaxTokens: 2048 }
+              PromptStyle: 5
+      responses:
+        '200':
+          description: OK
+          content:
+            text/event-stream: {}
+
+  /api/v1/RAG/Answer:
+    post:
+      tags: [RAG]
+      summary: Get RAG Answer (Standard)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RAGAnswerRequest' }
+            example:
+              Question: "ما هو الاسم الكامل لمحمد صلاح؟"
+              IndexNames: ["Mohamed Salah"]
+              Limit: 10
+              MaxLimit: 10
+              Temperature: 0.1
+              MaxOutputTokens: 1024
+              UpdateGlobal: false
+              IsStream: false
+      responses:
+        '200':
+          description: OK
+
+  /api/v1/RAG/Stream/Answer:
+    post:
+      tags: [RAG]
+      summary: Get RAG Answer (Streaming)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RAGStreamRequest' }
+            example:
+              Question: "اشرح لي تاريخ الحضارة المصرية القديمة"
+              IndexNames: ["Ancient_Egypt", "Egyptian_History"]
+              Temperature: 0.3
+              MaxOutputTokens: 2048
+              IsStream: true
+      responses:
+        '200':
+          description: OK
+          content:
+            text/event-stream: {}
+
+  /api/v2/AQL/SpeechToText:
+    post:
+      tags: [STT]
+      summary: Convert Speech to Text (Standard)
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/STTStandardForm'
+      responses:
+        '200':
+          description: OK
+
+  /api/v1/AQL/Stream/SpeechToText:
+    post:
+      tags: [STT]
+      summary: Convert Speech to Text (Streaming)
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/STTStreamForm'
+      responses:
+        '200':
+          description: OK
+
+  /api/v2/AQL/TextToSpeech:
+    post:
+      tags: [TTS]
+      summary: Convert Text to Speech (Standard)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TTSStandardRequest'
+            example:
+              text: "وش علومك اليوم؟"
+              lang_code: "ar-sa"
+              speaker: "Rawy"
+              temperature: 0.5
+              output_sr: 24000
+              session_id: "example-session-001"
+      responses:
+        '200':
+          description: OK
+          content:
+            audio/mpeg: {}
+
+  /api/v1/AQL/Stream/TextToSpeech:
+    post:
+      tags: [TTS]
+      summary: Convert Text to Speech (Streaming)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TTSStreamRequest'
+            example:
+              TextMessage: "مرحباً! هذا بث صوتي لحظي."
+              LanguageCode: "ar"
+              Speaker: "Hesham"
+              Temperature: 0.8
+              OutputSampleRate: 24000
+              StreamChunkSize: 300
+      responses:
+        '200':
+          description: OK
+          content:
+            audio/mpeg: {}
+
